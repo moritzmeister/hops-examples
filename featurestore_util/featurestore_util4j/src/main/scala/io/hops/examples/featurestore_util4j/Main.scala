@@ -33,7 +33,8 @@ class Conf(arguments: Seq[String]) extends ScallopConf(arguments) {
     descr = "comma separated list of columns to apply statisics to (if empty use all columns)",
     default = Some(""))
   val operation = opt[String](required = true, descr = "the featurestore operation")
-  val sqlquery = opt[String](required = false, descr = "custom SQL query to run against a Hive Database or JDBC " +
+  val sqlquery = opt[List[String]](required = false, descr = "custom SQL query to run against a Hive Database or JDBC" +
+    " " +
     "backend")
   val hivedb = opt[String](required = false, descr = "Hive Database to Apply SQL query to ")
   verify()
@@ -108,6 +109,20 @@ object Main {
   }
 
   /**
+    * Pre-process list of SQL query
+    *
+    * @param sqlQueryList the list of space separated input words from command-line
+    * @return a joined SQL string
+    */
+  def preProcessSqlQuery(sqlQueryList: List[String]): String = {
+    if(sqlQueryList.isEmpty){
+      throw new IllegalArgumentException("SQL Query Cannot Empty")
+    } else {
+      return sqlQueryList.mkString(" ")
+    }
+  }
+
+  /**
     * Pre-process comma-separated list of stat columns
     *
     * @param statColumnsStr the string to process
@@ -150,7 +165,7 @@ object Main {
     */
   def createFeaturegroupFromSparkSql(conf: Conf, log: Logger): Unit = {
     //Parse arguments
-    val sqlQuery = conf.sqlquery()
+    val sqlQuery = preProcessSqlQuery(conf.sqlquery())
     val hiveDb = conf.hivedb()
     val featuregroup = conf.featuregroup()
     val description = conf.description()
@@ -191,7 +206,8 @@ object Main {
     * @param log logger
     */
   def createFeaturegroupFromJdbcSql(conf: Conf, log: Logger): Unit = {
-
+    //jdbc_url = "jdbc:hive2://10.0.2.15:9085/demo_featurestore_admin000;auth=noSasl;ssl=true;twoWay=true;"
+    
   }
 
   /**
